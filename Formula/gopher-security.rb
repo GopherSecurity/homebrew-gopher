@@ -1,44 +1,47 @@
 class GopherSecurity < Formula
     desc "Gopher Security application"
     homepage "https://www.gopher.security"
-    url "https://s3.amazonaws.com/public.gopher.security/apps/release/darwin/GopherSecurity-darwin-0.0.2-15-amd64-release.pkg"
+    url "https://s3.amazonaws.com/public.gopher.security/apps/release/darwin/GopherSecurity-darwin-0.0.2-15-amd64-debug.pkg"
     sha256 "e0e640d5f8077f6af8026ee7bef9fc90df8b6aabc78164f3713eae70532dc213"
     version "0.0.2-15"
   
     def install
-      pkg_file = "GopherSecurity-darwin-0.0.2-15-amd64-release.pkg"
       system "sudo", "/usr/sbin/installer", "-pkg", "#{cached_download}", "-target", "/"
       
-      # Check if the application was installed
-      unless File.exist?("/Applications/GopherSecurity.app")
-        opoo "GopherSecurity.app was not found in /Applications after installation."
-      end
+      # Create symlinks for the executables if they exist
+      bin.install_symlink "/Applications/GopherSecurity/GopherSecurity.app/Contents/MacOS/gopher_security" => "gopher-security" if File.exist?("/Applications/GopherSecurity/GopherSecurity.app/Contents/MacOS/gopher_security")
       
-      # Try to find and symlink the main executable
-      gopher_exec = Dir.glob("/Applications/GopherSecurity.app/**/gopher").first
-      if gopher_exec && File.executable?(gopher_exec)
-        bin.install_symlink gopher_exec
-      else
-        opoo "Could not find or symlink the 'gopher' executable. You may need to run it directly from the Applications folder."
+      # Check for and symlink any additional executables that might be part of your Flutter app
+      Dir.glob("/Applications/GopherSecurity/GopherSecurity.app/Contents/MacOS/*").each do |file|
+        if File.executable?(file) && !File.directory?(file)
+          bin.install_symlink file => File.basename(file).downcase.gsub("_", "-")
+        end
       end
     end
   
     def post_install
       system "pkgutil", "--pkgs | grep -i gopher"
-      ohai "Installation complete. If 'gopher' command is not available, try running the application from /Applications/GopherSecurity.app"
+      ohai "Installation complete. You can start GopherSecurity by running 'gopher-security' or opening the application from /Applications/GopherSecurity/GopherSecurity.app"
     end
   
     def uninstall
-      system "sudo", "/Applications/GopherSecurity/uninstallAll"
+      system "sudo", "rm", "-rf", "/Applications/GopherSecurity"
+      system "sudo", "pkgutil", "--forget", "gopher.security.app"
     end
   
     def caveats
       <<~EOS
-        GopherSecurity has been installed to /Applications/GopherSecurity.app
-  
-        If the 'gopher' command is not found in your terminal, you can:
-        1. Run the application directly from /Applications/GopherSecurity.app
-        2. Add the application's bin directory to your PATH if available
+        GopherSecurity has been installed:
+        
+        - The main application is located at:
+          /Applications/GopherSecurity/GopherSecurity.app
+        
+        - The main executable has been symlinked to #{HOMEBREW_PREFIX}/bin as:
+          gopher-security
+        
+        To start GopherSecurity, you can:
+        1. Open /Applications/GopherSecurity/GopherSecurity.app
+        2. Run 'gopher-security' in your terminal
   
         To uninstall, run:
           brew uninstall gopher-security
