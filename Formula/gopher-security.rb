@@ -7,7 +7,7 @@ class GopherSecurity < Formula
   
     def install
       pkg_name = "GopherSecurity-darwin-0.0.2-15-amd64-release.pkg"
-      system "/usr/sbin/installer", "-pkg", "#{cached_download}", "-target", "/"
+      system "sudo", "/usr/sbin/installer", "-pkg", "#{cached_download}", "-target", "/"
     end
   
     def uninstall
