@@ -6,59 +6,34 @@ class GopherSecurity < Formula
     version "0.0.2-15"
   
     def install
-      # Force a password prompt by invalidating sudo timestamp
-      system "sudo", "-k"
-      
-      # Use sudo with -S to read the password from stdin
-      IO.popen(["sudo", "-S", "/usr/sbin/installer", "-pkg", "#{cached_download}", "-target", "/"], "w") do |io|
-        puts "Please enter your password for sudo access:"
-        io.puts $stdin.gets.chomp
-      end
-      
-      # Create symlinks for the executables if they exist
-      bin.install_symlink "/Applications/GopherSecurity/GopherSecurity.app/Contents/MacOS/gopher_security" => "gopher-security" if File.exist?("/Applications/GopherSecurity/GopherSecurity.app/Contents/MacOS/gopher_security")
-      
-      # Check for and symlink any additional executables that might be part of your Flutter app
-      Dir.glob("/Applications/GopherSecurity/GopherSecurity.app/Contents/MacOS/*").each do |file|
-        if File.executable?(file) && !File.directory?(file)
-          bin.install_symlink file => File.basename(file).downcase.gsub("_", "-")
-        end
-      end
+      # Extract the .pkg file
+      system "/usr/sbin/pkgutil", "--expand", "#{cached_download}", "#{buildpath}/extracted"
+  
+      # Install the application bundle
+      prefix.install Dir["#{buildpath}/extracted/**/GopherSecurity.app"]
+  
+      # Create symlinks for executables
+      bin.install_symlink "#{prefix}/GopherSecurity.app/Contents/MacOS/gopher_security" => "gopher-security"
     end
   
     def post_install
-      system "pkgutil", "--pkgs | grep -i gopher"
-      ohai "Installation complete. You can start GopherSecurity by running 'gopher-security' or opening the application from /Applications/GopherSecurity/GopherSecurity.app"
-    end
-  
-    def uninstall
-      system "sudo", "-k"  # Invalidate sudo timestamp
-      IO.popen(["sudo", "-S", "rm", "-rf", "/Applications/GopherSecurity"], "w") do |io|
-        puts "Please enter your password for sudo access to uninstall:"
-        io.puts $stdin.gets.chomp
-      end
-      system "sudo", "pkgutil", "--forget", "gopher.security.app"
+      # Run any post-installation scripts if necessary
+      system "#{prefix}/GopherSecurity.app/Contents/Resources/postinstall" if File.exist? "#{prefix}/GopherSecurity.app/Contents/Resources/postinstall"
     end
   
     def caveats
       <<~EOS
-        GopherSecurity has been installed:
-        
-        - The main application is located at:
-          /Applications/GopherSecurity/GopherSecurity.app
-        
-        - The main executable has been symlinked to #{HOMEBREW_PREFIX}/bin as:
-          gopher-security
-        
-        To start GopherSecurity, you can:
-        1. Open /Applications/GopherSecurity/GopherSecurity.app
-        2. Run 'gopher-security' in your terminal
+        GopherSecurity has been installed at:
+          #{prefix}/GopherSecurity.app
   
-        To uninstall, run:
-          brew uninstall gopher-security
+        You can start GopherSecurity by running:
+          open #{prefix}/GopherSecurity.app
+        
+        Or by running 'gopher-security' in your terminal.
   
-        Note: This formula requires sudo access to install and uninstall the application.
-        You will be explicitly prompted for your password during these operations.
+        Note: This installation method does not require sudo, but it may not set up
+        all system integrations. If you encounter any issues, you may need to run
+        the official installer with sudo privileges.
       EOS
     end
   end
