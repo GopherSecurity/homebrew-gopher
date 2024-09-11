@@ -1,17 +1,19 @@
 class GopherSecurity < Formula
     desc "Gopher Security application"
     homepage "https://www.gopher.security"
-    url "https://s3.amazonaws.com/public.gopher.security/apps/release/darwin/GopherSecurity-darwin-0.0.2-15-amd64-release.pkg"
+    url "https://s3.amazonaws.com/public.gopher.security/apps/release/darwin/GopherSecurity-darwin-0.0.2-15-amd64-debug.pkg"
     sha256 "e0e640d5f8077f6af8026ee7bef9fc90df8b6aabc78164f3713eae70532dc213"
     version "0.0.2-15"
   
     def install
-      # Explicitly request sudo access
-      system "echo", "Requesting sudo access for installation:"
-      system "sudo", "-v"
+      # Force a password prompt by invalidating sudo timestamp
+      system "sudo", "-k"
       
-      # Perform the installation
-      system "sudo", "/usr/sbin/installer", "-pkg", "#{cached_download}", "-target", "/"
+      # Use sudo with -S to read the password from stdin
+      IO.popen(["sudo", "-S", "/usr/sbin/installer", "-pkg", "#{cached_download}", "-target", "/"], "w") do |io|
+        puts "Please enter your password for sudo access:"
+        io.puts $stdin.gets.chomp
+      end
       
       # Create symlinks for the executables if they exist
       bin.install_symlink "/Applications/GopherSecurity/GopherSecurity.app/Contents/MacOS/gopher_security" => "gopher-security" if File.exist?("/Applications/GopherSecurity/GopherSecurity.app/Contents/MacOS/gopher_security")
@@ -30,9 +32,11 @@ class GopherSecurity < Formula
     end
   
     def uninstall
-      system "echo", "Requesting sudo access for uninstallation:"
-      system "sudo", "-v"
-      system "sudo", "rm", "-rf", "/Applications/GopherSecurity"
+      system "sudo", "-k"  # Invalidate sudo timestamp
+      IO.popen(["sudo", "-S", "rm", "-rf", "/Applications/GopherSecurity"], "w") do |io|
+        puts "Please enter your password for sudo access to uninstall:"
+        io.puts $stdin.gets.chomp
+      end
       system "sudo", "pkgutil", "--forget", "gopher.security.app"
     end
   
@@ -54,7 +58,7 @@ class GopherSecurity < Formula
           brew uninstall gopher-security
   
         Note: This formula requires sudo access to install and uninstall the application.
-        You will be prompted for your password during these operations.
+        You will be explicitly prompted for your password during these operations.
       EOS
     end
   end
