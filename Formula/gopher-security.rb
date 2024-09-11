@@ -6,6 +6,11 @@ class GopherSecurity < Formula
     version "0.0.2-15"
   
     def install
+      # Explicitly request sudo access
+      system "echo", "Requesting sudo access for installation:"
+      system "sudo", "-v"
+      
+      # Perform the installation
       system "sudo", "/usr/sbin/installer", "-pkg", "#{cached_download}", "-target", "/"
       
       # Create symlinks for the executables if they exist
@@ -25,6 +30,8 @@ class GopherSecurity < Formula
     end
   
     def uninstall
+      system "echo", "Requesting sudo access for uninstallation:"
+      system "sudo", "-v"
       system "sudo", "rm", "-rf", "/Applications/GopherSecurity"
       system "sudo", "pkgutil", "--forget", "gopher.security.app"
     end
@@ -47,6 +54,7 @@ class GopherSecurity < Formula
           brew uninstall gopher-security
   
         Note: This formula requires sudo access to install and uninstall the application.
+        You will be prompted for your password during these operations.
       EOS
     end
   end
