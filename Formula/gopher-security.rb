@@ -7,18 +7,37 @@ class GopherSecurity < Formula
   
     def install
       # Extract the .pkg file
-      system "/usr/sbin/pkgutil", "--expand", "#{cached_download}", "#{buildpath}/extracted"
+      system_command! "/usr/sbin/pkgutil",
+        args: ["--expand", "#{cached_download}", "#{buildpath}/extracted"],
+        verbose: true
+  
+      # Check if extraction was successful
+      extracted_path = Pathname.new("#{buildpath}/extracted")
+      raise "Failed to extract package contents" unless extracted_path.directory?
+  
+      # Find the .app directory
+      app_dir = Pathname.glob("#{extracted_path}/**/*.app").first
+      raise "Could not find .app directory in extracted contents" if app_dir.nil?
   
       # Install the application bundle
-      prefix.install Dir["#{buildpath}/extracted/**/GopherSecurity.app"]
+      prefix.install app_dir
   
       # Create symlinks for executables
-      bin.install_symlink "#{prefix}/GopherSecurity.app/Contents/MacOS/gopher_security" => "gopher-security"
+      executable_path = "#{prefix}/#{app_dir.basename}/Contents/MacOS/gopher_security"
+      if File.executable?(executable_path)
+        bin.install_symlink executable_path => "gopher-security"
+      else
+        opoo "Executable 'gopher_security' not found in the expected location"
+      end
     end
   
     def post_install
-      # Run any post-installation scripts if necessary
-      system "#{prefix}/GopherSecurity.app/Contents/Resources/postinstall" if File.exist? "#{prefix}/GopherSecurity.app/Contents/Resources/postinstall"
+      app_path = "#{prefix}/GopherSecurity.app"
+      if File.directory?(app_path)
+        system_command "/usr/bin/xattr",
+          args: ["-rd", "com.apple.quarantine", app_path],
+          sudo: true
+      end
     end
   
     def caveats
@@ -31,9 +50,11 @@ class GopherSecurity < Formula
         
         Or by running 'gopher-security' in your terminal.
   
-        Note: This installation method does not require sudo, but it may not set up
-        all system integrations. If you encounter any issues, you may need to run
-        the official installer with sudo privileges.
+        If you encounter any issues, please try the following:
+        1. Ensure you have the necessary permissions to run the application.
+        2. If the application doesn't start, try running the official installer with sudo privileges.
+  
+        For support, please contact Gopher Security support team.
       EOS
     end
   end
