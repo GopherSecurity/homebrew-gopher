@@ -1,4 +1,4 @@
-cask "gopher-security" do
+cask "gopher.security.app" do
     version "0.0.2-15"
     sha256 "e0e640d5f8077f6af8026ee7bef9fc90df8b6aabc78164f3713eae70532dc213"
   
@@ -11,14 +11,14 @@ cask "gopher-security" do
   
     # Use the existing uninstallAll script during uninstallation
     uninstall script: {
-      executable: "/Applications/GopherSecurity/uninstallAll",
+      executable: "./Applications/GopherSecurity/uninstallAll",
       sudo:       true,
     }
   
     caveats <<~EOS
       GopherSecurity has been installed.
       To uninstall, run:
-        brew uninstall gopher-security
+        brew uninstall gopher.security.app
       You may need to restart your computer for all changes to take effect.
     EOS
   end
