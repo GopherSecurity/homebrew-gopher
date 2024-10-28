@@ -1,4 +1,4 @@
-cask "gopher_security" do
+cask "gopher_security_app" do
     version "0.0.2-31"
     sha256 "9534ec05b689d22ef0a66c113484f4a4e75011386f975b2da3dd491fd08e3539"
   
