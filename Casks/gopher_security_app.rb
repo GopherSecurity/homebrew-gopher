@@ -18,7 +18,7 @@ cask "gopher_security_app" do
     caveats <<~EOS
       GopherSecurity has been installed.
       To uninstall, run:
-        brew uninstall gopher_security
+        brew uninstall gopher_security_app
       You may need to restart your computer for all changes to take effect.
     EOS
   end
