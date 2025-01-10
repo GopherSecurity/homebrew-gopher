@@ -1,6 +1,6 @@
 cask "gopher_security_app" do
-    version "0.0.2-33"
-    sha256 "9534ec05b689d22ef0a66c113484f4a4e75011386f975b2da3dd491fd08e3539"
+    version "0.0.2-35"
+    sha256 "9559b8f78d00afd78ba736b5b9812c7c6c9e8e309b7e706469ea11f8102a8e91"
   
     url "https://download.gopher.security/apps/release/darwin/GopherSecurity-darwin-#{version}-amd64-release.pkg"
     name "Gopher Security"
